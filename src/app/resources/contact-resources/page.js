@@ -85,7 +85,7 @@ const cards = [
   },
 ];
 
-const page = () => {
+const ContactResources = () => {
   const [fileName, setFileName] = useState(null);
 
   const handleFileChange = (e) => {
@@ -446,4 +446,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default ContactResources;

@@ -93,7 +93,7 @@ const services = [
   },
 ];
 
-const page = () => {
+const HireProfessional = () => {
   return (
     <>
       {/* Banner */}
@@ -474,4 +474,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default HireProfessional;
