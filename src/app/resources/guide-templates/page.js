@@ -8,7 +8,6 @@ import maskgroup from "@/assets/images/guide-mask-group.png";
 import bannerimg from "@/assets/images/banner/guide-banner.png";
 import ourBlogBGImg from "@/assets/images/our-blog-bg-img.png";
 import img1 from "@/assets/images/Group-1261153897.png";
-import img2 from "@/assets/images/Group 1261153903.png";
 import img3 from "@/assets/images/Group-1261153896.png";
 import a5Image from "@/assets/images/image-30-1.png";
 import usTradeImage from "@/assets/images/image-31-1.png";
@@ -209,7 +208,7 @@ const GuideTemplate = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              <div className="relative w-60 h-60 sm:w-110 sm:h-110">
+              <div className="relative w-60 h-60 sm:w-90 sm:h-90">
                 <Image
                   src={img1}
                   alt="Bookmaking Basics"
@@ -270,9 +269,9 @@ const GuideTemplate = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              <div className="relative w-60 h-60 sm:w-110 sm:h-110">
+              <div className="relative w-60 h-60 sm:w-90 sm:h-90">
                 <Image
-                  src={img2}
+                  src={img3}
                   alt="Formatting Tips For Print Books"
                   fill
                   className="object-contain"
@@ -332,7 +331,7 @@ const GuideTemplate = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              <div className="relative w-60 h-60 sm:w-110 sm:h-110">
+              <div className="relative w-60 h-60 sm:w-90 sm:h-90">
                 <Image
                   src={img3}
                   alt="Free New User Guide"

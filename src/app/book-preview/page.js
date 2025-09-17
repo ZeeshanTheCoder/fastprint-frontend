@@ -8,7 +8,6 @@ import { BASE_URL } from "@/services/baseUrl";
 import HTMLFlipBook from "react-pageflip";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 const API_BASE = `${BASE_URL}`;
 
 const NavBar = ({ navigate }) => (

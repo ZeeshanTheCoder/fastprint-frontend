@@ -1077,7 +1077,7 @@ const PrintBookCalculator = () => {
             <h2 className="text-lg sm:text-xl font-bold text-[#2A428C] mb-2 text-center">
               High-Quality Book Printing
             </h2>
-            <div className="w-full flex h-0.5 bg-gray-300 mb-4"></div>
+            <div className="w-full h-0.5 bg-gray-300 mb-4"></div>
 
             {[
               [
