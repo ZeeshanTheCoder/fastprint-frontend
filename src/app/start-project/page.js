@@ -13,6 +13,8 @@ import Image6 from "@/assets/images/startproject6.png";
 import Image7 from "@/assets/images/startproject7.png";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 // ✅ Product Cards
 const productCards = [
   {

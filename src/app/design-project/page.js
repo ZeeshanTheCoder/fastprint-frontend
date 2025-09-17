@@ -35,6 +35,8 @@ import {
 } from "@/calculators/pricing";
 import { BASE_URL } from "@/services/baseUrl";
 
+export const dynamic = "force-dynamic";
+
 // PDF.js worker setup
 // ✅ Move pdfjsLib loading to a dynamic import
 let pdfjsLib = null;
