@@ -4,8 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function VerifyEmail() {
-  const params = useParams();
-  const { uidb64, token } = params;
+  const { uidb64, token } = useParams();
   const [msg, setMsg] = useState("");
   const router = useRouter();
 
@@ -15,9 +14,7 @@ export default function VerifyEmail() {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-    fetch(`${API_BASE_URL}/api/users/verify-email/${uidb64}/${token}/`, {
-      method: "GET",
-    })
+    fetch(`${API_BASE_URL}/api/users/verify-email/${uidb64}/${token}/`)
       .then((res) => {
         if (!res.ok) throw new Error("Verification failed");
         return res.json();

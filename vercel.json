@@ -1,5 +1,12 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/verify-email/:uidb64/:token",
+      "destination": "/verify-email/:uidb64/:token"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
 }
