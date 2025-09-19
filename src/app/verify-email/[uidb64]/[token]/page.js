@@ -1,24 +1,20 @@
+// app/verify-email/[uidb64]/[token]/page.js
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { verifyEmail } from "@/services/authService";
 
 export default function VerifyEmail() {
-  const { uidb64, token } = useParams();
+  const params = useParams();
+  const { uidb64, token } = params;
   const [msg, setMsg] = useState("");
   const router = useRouter();
 
   useEffect(() => {
     if (!uidb64 || !token) return;
 
-    const API_BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-    fetch(`${API_BASE_URL}/api/users/verify-email/${uidb64}/${token}/`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Verification failed");
-        return res.json();
-      })
+    verifyEmail(uidb64, token)
       .then(() => {
         setMsg("Email verified! You can now log in.");
         setTimeout(() => router.push("/login"), 2000);
