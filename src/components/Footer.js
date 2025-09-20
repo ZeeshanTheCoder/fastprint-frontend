@@ -158,10 +158,10 @@ const Footer = () => {
       <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 text-white text-sm max-w-7xl mx-auto gap-4 md:gap-0">
         <span>© 2025 Fast Print Guys, All Rights Reserved.</span>
         <div className="flex gap-6">
-          <Link href="/privacy" className="cursor-pointer hover:underline">
+          <Link href="/privacy-policy" className="cursor-pointer hover:underline">
             Privacy Policy
           </Link>
-          <Link href="/terms" className="cursor-pointer hover:underline">
+          <Link href="/terms-and-conditions" className="cursor-pointer hover:underline">
             Terms & Conditions
           </Link>
         </div>
