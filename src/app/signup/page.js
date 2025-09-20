@@ -10,13 +10,19 @@ import Image from "next/image";
 
 const Signup = () => {
   const [form, setForm] = useState({ email: "", name: "", password: "" });
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // ✅ NEW STATE
   const [message, setMessage] = useState("");
   const [formDisabled, setFormDisabled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [focusedField, setFocusedField] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const [errors, setErrors] = useState({ email: "", name: "", password: "" });
+  const [errors, setErrors] = useState({
+    email: "",
+    name: "",
+    password: "",
+    terms: "", // ✅ NEW ERROR FIELD
+  });
 
   const router = useRouter();
 
@@ -82,6 +88,14 @@ const Signup = () => {
     });
   };
 
+  // ✅ Handle Terms Checkbox Change
+  const handleTermsChange = (e) => {
+    setAgreedToTerms(e.target.checked);
+    if (e.target.checked) {
+      setErrors((prev) => ({ ...prev, terms: "" }));
+    }
+  };
+
   const handleBlur = (e) => {
     const { name, value } = e.target;
     setFocusedField("");
@@ -121,6 +135,7 @@ const Signup = () => {
       validateName(form.name) &&
       validateEmail(form.email) &&
       validatePassword(form.password) &&
+      agreedToTerms && // ✅ ADD THIS CONDITION
       !formDisabled
     );
   };
@@ -145,10 +160,16 @@ const Signup = () => {
       : validatePassword(form.password)
       ? ""
       : passwordErrorList.join("\n");
+    const termsError = !agreedToTerms ? "You must agree to the Terms & Conditions and Privacy Policy." : ""; // ✅ VALIDATE TERMS
 
-    setErrors({ name: nameError, email: emailError, password: passwordError });
+    setErrors({
+      name: nameError,
+      email: emailError,
+      password: passwordError,
+      terms: termsError, // ✅ SET TERMS ERROR
+    });
 
-    if (nameError || emailError || passwordError) {
+    if (nameError || emailError || passwordError || termsError) {
       return;
     }
 
@@ -160,7 +181,7 @@ const Signup = () => {
         "Registered successfully! Please check your email to verify your account."
       );
       setIsSuccess(true);
-      setFormDisabled(false); // ✅ Stop loader after success
+      setFormDisabled(false);
     } catch (err) {
       const errorMsg =
         err.response?.data?.email?.[0] ||
@@ -388,6 +409,42 @@ const Signup = () => {
                     }`}
                 ></div>
                 {renderPasswordErrors(errors.password)}
+              </div>
+
+              {/* ✅ Terms & Conditions Checkbox */}
+              <div className="relative group">
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={handleTermsChange}
+                    className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    aria-invalid={!!errors.terms}
+                    aria-describedby="terms-error"
+                  />
+                  <span className="text-sm text-gray-700 leading-tight">
+                    I have read and agree to the{" "}
+                    <Link
+                      href="/terms-and-conditions"
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      Terms & Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/privacy-policy"
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+                {errors.terms && (
+                  <p id="terms-error" className="mt-1 text-xs text-red-600">
+                    {errors.terms}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
