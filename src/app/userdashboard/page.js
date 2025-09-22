@@ -144,7 +144,7 @@ const UserDashboard = () => {
   // Sort filtered books
   useEffect(() => {
     if (sortConfig.key) {
-      const sorted = [...filteredBooks].sort((a, b) => {
+      const sorted = [...books].sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
           return sortConfig.direction === "asc" ? -1 : 1;
         }
@@ -156,7 +156,7 @@ const UserDashboard = () => {
 
       setFilteredBooks(sorted);
     }
-  }, [sortConfig, filteredBooks]);
+  }, [sortConfig, books]);
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -202,7 +202,7 @@ const UserDashboard = () => {
           <div className="relative">
             <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#016AB3]/20 border-t-[#016AB3]" />
             <div
-              className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#0096CD] animate-spin"
+              className="absolute inset-0 rounded-full border-4 border-transparent animate-spin"
               style={{ animationDuration: "0.8s" }}
             />
           </div>

@@ -91,6 +91,7 @@ const BookPreviewContent = () => {
   useEffect(() => {
     const savedPdfDataUrl = localStorage.getItem("previewPdfDataUrl");
     const savedProjectData = localStorage.getItem("previewProjectData");
+    const savedFormData = localStorage.getItem("previewFormData");
 
     if (savedPdfDataUrl) {
       setPdfDataUrl(savedPdfDataUrl);
@@ -101,6 +102,10 @@ const BookPreviewContent = () => {
 
     if (savedProjectData) {
       JSON.parse(savedProjectData);
+    }
+
+    if (savedFormData) {
+      JSON.parse(savedFormData);
     }
   }, [router]);
 
@@ -169,7 +174,349 @@ const BookPreviewContent = () => {
   };
 
   const handleSubmit = async () => {
-    router.push("/shop");
+    // Determine if in edit mode
+    const isEditMode = searchParams.get("edit") === "true";
+
+    // Get the form data and files from localStorage and window
+    const formDataString = localStorage.getItem("previewFormData");
+    const projectDataString = localStorage.getItem("previewProjectData");
+    const bookFile = window.tempBookFileForSubmission;
+    const coverFile = window.tempCoverFileForSubmission;
+
+    if (!formDataString || !projectDataString || !bookFile) {
+      alert("Missing required data. Please go back and complete all steps.");
+      return;
+    }
+
+    const formData = JSON.parse(formDataString);
+    const projectData = JSON.parse(projectDataString);
+    const projectId = projectData.projectId; // Get the project ID for updates
+
+    // Create FormData object for API submission
+    const submissionData = new FormData();
+    submissionData.append("title", projectData.projectTitle || "");
+    submissionData.append("category", projectData.category);
+    submissionData.append("language", projectData.language);
+    submissionData.append("pdf_file", bookFile);
+    if (coverFile) {
+      submissionData.append("cover_file", coverFile);
+    }
+
+    // Helper function to get option name
+    const getOptionName = (options, id) => {
+      if (!options || !id) return "";
+      const option = options.find((opt) => opt.id === Number(id));
+      return option ? option.name : "";
+    };
+
+    // Get dropdown options from DesignProjectPreview config
+    // We'll need to recreate the options based on category
+    const buildLocalConfig = (category) => {
+      switch (category) {
+        case "Print Book":
+        case "Photo Book": {
+          const BOOK_SIZES = [
+            '5.5" x 8.5"',
+            '6" x 9"',
+            '7" x 10"',
+            '8.5" x 11"',
+            '8.5" x 8.5"',
+            "A4",
+            "A5",
+          ];
+          const interiorColors = [
+            { id: 1, name: "Standard Black and White", dbName: "standard_bw" },
+            { id: 2, name: "Premium Black and White", dbName: "premium_bw" },
+            { id: 3, name: "Standard Color", dbName: "standard_color" },
+            { id: 4, name: "Premium Color", dbName: "premium_color" },
+          ];
+          const paperTypes = [
+            { id: 1, name: "60# Cream Uncoated", dbName: "60_cream_uncoated" },
+            { id: 2, name: "60# White Uncoated", dbName: "60_white_uncoated" },
+            { id: 3, name: "70# White Uncoated", dbName: "70_white_uncoated" },
+            { id: 4, name: "80# White Coated", dbName: "80_white_coated" },
+            { id: 5, name: "100# White Coated", dbName: "100_white_coated" },
+          ];
+          const coverFinishes = [
+            { id: 1, name: "Gloss", dbName: "gloss" },
+            { id: 2, name: "Matte", dbName: "matte" },
+          ];
+          const bindings = [
+            { id: 1, name: "Perfect Bound" },
+            { id: 2, name: "Saddle Stitch" },
+            { id: 3, name: "Case Wrap" },
+            { id: 4, name: "Linen Wrap" },
+            { id: 5, name: "Coil Bound" },
+            { id: 6, name: "Wire O" },
+          ];
+          return {
+            trim_sizes: BOOK_SIZES.map((size, index) => ({
+              id: index + 1,
+              name: size,
+            })),
+            interior_colors: interiorColors,
+            paper_types: paperTypes,
+            cover_finishes: coverFinishes,
+            bindings: bindings,
+          };
+        }
+        case "Comic Book": {
+          const COMIC_TRIM_SIZES = [
+            { id: 1, name: '6.625" x 10.25"' },
+            { id: 2, name: '7" x 10"' },
+            { id: 3, name: '8.5" x 11"' },
+          ];
+          const interiorColors = [
+            { id: 1, name: "Standard Black and White", dbName: "standard_bw" },
+            { id: 2, name: "Premium Black and White", dbName: "premium_bw" },
+            { id: 3, name: "Standard Color", dbName: "standard_color" },
+            { id: 4, name: "Premium Color", dbName: "premium_color" },
+          ];
+          const paperTypes = [
+            { id: 1, name: "60# Cream Uncoated", dbName: "60_cream_uncoated" },
+            { id: 2, name: "60# White Uncoated", dbName: "60_white_uncoated" },
+            { id: 3, name: "70# White Uncoated", dbName: "70_white_uncoated" },
+            { id: 4, name: "80# White Coated", dbName: "80_white_coated" },
+            { id: 5, name: "100# White Coated", dbName: "100_white_coated" },
+          ];
+          const coverFinishes = [
+            { id: 1, name: "Gloss", dbName: "gloss" },
+            { id: 2, name: "Matte", dbName: "matte" },
+          ];
+          const bindings = [
+            { id: 1, name: "Perfect Bound" },
+            { id: 2, name: "Saddle Stitch" },
+            { id: 3, name: "Case Wrap" },
+            { id: 4, name: "Linen Wrap" },
+            { id: 5, name: "Coil Bound" },
+            { id: 6, name: "Wire O" },
+          ];
+          return {
+            trim_sizes: COMIC_TRIM_SIZES,
+            interior_colors: interiorColors,
+            paper_types: paperTypes,
+            cover_finishes: coverFinishes,
+            bindings: bindings,
+          };
+        }
+        case "Magazine":
+        case "Year Book": {
+          const SIMPLE_TRIM_SIZES = [
+            '5.5" x 8.5"',
+            '6" x 9"',
+            '7" x 10"',
+            '8.5" x 11"',
+            '8.5" x 8.5"',
+            "A4",
+            "A5",
+          ];
+          const interiorColors = [
+            { id: 1, name: "Standard Black and White", dbName: "standard_bw" },
+            { id: 2, name: "Premium Black and White", dbName: "premium_bw" },
+            { id: 3, name: "Standard Color", dbName: "standard_color" },
+            { id: 4, name: "Premium Color", dbName: "premium_color" },
+          ];
+          const paperTypes = [
+            { id: 1, name: "60# Cream Uncoated", dbName: "60_cream_uncoated" },
+            { id: 2, name: "60# White Uncoated", dbName: "60_white_uncoated" },
+            { id: 3, name: "70# White Uncoated", dbName: "70_white_uncoated" },
+            { id: 4, name: "80# White Coated", dbName: "80_white_coated" },
+            { id: 5, name: "100# White Coated", dbName: "100_white_coated" },
+          ];
+          const coverFinishes = [
+            { id: 1, name: "Gloss", dbName: "gloss" },
+            { id: 2, name: "Matte", dbName: "matte" },
+          ];
+          const bindings = [
+            { id: 1, name: "Perfect Bound" },
+            { id: 2, name: "Saddle Stitch" },
+            { id: 3, name: "Case Wrap" },
+            { id: 4, name: "Linen Wrap" },
+            { id: 5, name: "Coil Bound" },
+            { id: 6, name: "Wire O" },
+          ];
+          return {
+            trim_sizes: SIMPLE_TRIM_SIZES.map((size, index) => ({
+              id: index + 1,
+              name: size,
+            })),
+            interior_colors: interiorColors,
+            paper_types: paperTypes,
+            cover_finishes: coverFinishes,
+            bindings: bindings,
+          };
+        }
+        case "Calendar":
+        case "Calender": {
+          const CALENDAR_SIZES = [
+            '8.5" x 11"',
+            '11" x 8.5"',
+            '12" x 12"',
+            "A4",
+          ];
+          const interiorColors = [
+            { id: 1, name: "Standard Black and White", dbName: "standard_bw" },
+            { id: 2, name: "Premium Black and White", dbName: "premium_bw" },
+            { id: 3, name: "Standard Color", dbName: "standard_color" },
+            { id: 4, name: "Premium Color", dbName: "premium_color" },
+          ];
+          const paperTypes = [
+            { id: 1, name: "60# Cream Uncoated", dbName: "60_cream_uncoated" },
+            { id: 2, name: "60# White Uncoated", dbName: "60_white_uncoated" },
+            { id: 3, name: "70# White Uncoated", dbName: "70_white_uncoated" },
+            { id: 4, name: "80# White Coated", dbName: "80_white_coated" },
+            { id: 5, name: "100# White Coated", dbName: "100_white_coated" },
+          ];
+          const coverFinishes = [
+            { id: 1, name: "Gloss", dbName: "gloss" },
+            { id: 2, name: "Matte", dbName: "matte" },
+          ];
+          const bindings = [
+            { id: 1, name: "Wire-O" },
+            { id: 2, name: "Spiral" },
+            { id: 3, name: "Wall Mount" },
+          ];
+          return {
+            trim_sizes: CALENDAR_SIZES.map((size, index) => ({
+              id: index + 1,
+              name: size,
+            })),
+            interior_colors: interiorColors,
+            paper_types: paperTypes,
+            cover_finishes: coverFinishes,
+            bindings: bindings,
+          };
+        }
+        default:
+          return {
+            trim_sizes: [],
+            interior_colors: [],
+            paper_types: [],
+            cover_finishes: [],
+            bindings: [],
+          };
+      }
+    };
+
+    // Get configuration based on category
+    const config = buildLocalConfig(projectData.category);
+
+    // Append form data to submission
+    submissionData.append(
+      "binding_type",
+      getOptionName(config.bindings, formData.binding_id)
+    );
+    submissionData.append(
+      "cover_finish",
+      getOptionName(config.cover_finishes, formData.cover_finish_id)
+    );
+    submissionData.append(
+      "interior_color",
+      getOptionName(config.interior_colors, formData.interior_color_id)
+    );
+    submissionData.append(
+      "paper_type",
+      getOptionName(config.paper_types, formData.paper_type_id)
+    );
+
+    // For non-calendar categories, include trim size
+    if (
+      projectData.category !== "Calendar" &&
+      projectData.category !== "Calender"
+    ) {
+      submissionData.append(
+        "trim_size",
+        getOptionName(config.trim_sizes, formData.trim_size_id)
+      );
+    }
+
+    // Always include page count
+    submissionData.append("page_count", formData.page_count || 1);
+
+    // Set up config for API call
+    const configObj = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      onUploadProgress: (progressEvent) => {
+        const progress = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload progress: ${progress}%`);
+      },
+    };
+
+    try {
+      let response;
+
+      if (isEditMode && projectId) {
+        // Update existing book
+        response = await axios.put(
+          `${API_BASE}api/book/books/${projectId}/update/`,
+          submissionData,
+          configObj
+        );
+      } else {
+        // Create new book
+        response = await axios.post(
+          `${API_BASE}api/book/upload-book/`,
+          submissionData,
+          configObj
+        );
+      }
+
+      if (response.data?.status === "success") {
+        alert(
+          isEditMode
+            ? "Project updated successfully!"
+            : "Project submitted successfully!"
+        );
+
+        // Save shop data for next step
+        const shopData = {
+          originalTotalCost: 0, // You might want to calculate this based on formData
+          finalTotalCost: 0, // You might want to calculate this based on formData
+          totalCost: 0, // You might want to calculate this based on formData
+          initialQuantity: formData.quantity || 1,
+          costPerBook: 0, // You might want to calculate this based on formData
+        };
+
+        // Try to get pricing data from localStorage if available
+        const savedShopData = localStorage.getItem("shopData");
+        if (savedShopData) {
+          try {
+            const parsedShopData = JSON.parse(savedShopData);
+            Object.assign(shopData, parsedShopData);
+          } catch (e) {
+            console.warn("Could not parse shopData from localStorage");
+          }
+        }
+
+        localStorage.setItem("shopData", JSON.stringify(shopData));
+
+        // Clean up temporary files and project data if in edit mode
+        delete window.tempBookFileForSubmission;
+        delete window.tempCoverFileForSubmission;
+        if (isEditMode) {
+          localStorage.removeItem("projectData"); // Optional: Clean up after edit
+        }
+
+        // Navigate to shop page
+        router.push("/shop");
+      } else {
+        alert(
+          "Submission failed: " + (response.data.message || "Unknown error")
+        );
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert(
+        error.response?.data?.message ||
+          error.message ||
+          "An error occurred while submitting your project."
+      );
+    }
   };
 
   if (!pdfDataUrl || !renderedPages[0]) {

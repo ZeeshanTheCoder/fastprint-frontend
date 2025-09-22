@@ -154,6 +154,15 @@ const Shop = () => {
         }
       );
       alert("Shipping information saved!");
+      console.log("Sending to API:", {
+        user_address: { ...form },
+        shipping_rate: shippingRate,
+        tax: tax,
+        product_quantity: productQuantity,
+        product_price: productPrice,
+        subtotal: subtotal,
+        selected_service: selectedService,
+      });
 
       // Navigate to payment page with all calculated values
       localStorage.setItem(
@@ -334,7 +343,7 @@ const Shop = () => {
     "w-full py-2 md:py-3 text-white font-medium text-sm rounded-full shadow-md hover:shadow-lg transition-all duration-200";
 
   const handleEditClick = () => {
-    router.push('/design-project')
+    router.push("/design-project");
   };
 
   return (

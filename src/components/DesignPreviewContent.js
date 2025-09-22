@@ -1518,7 +1518,7 @@ const DesignProjectPreview = () => {
 
             <button
               onClick={() => {
-                // ✅ NEW: Validate all required fields before proceeding
+                // Validate all required fields before proceeding
                 const isCalendar = state.projectData?.category === "Calender";
                 const requiredFields = isCalendar
                   ? [
@@ -1540,7 +1540,6 @@ const DesignProjectPreview = () => {
                 const missingFields = requiredFields.filter(
                   (field) => !state.form[field]
                 );
-
                 if (missingFields.length > 0) {
                   alert(
                     "Please complete all book configuration options before previewing."
@@ -1565,19 +1564,23 @@ const DesignProjectPreview = () => {
                 const reader = new FileReader();
                 reader.onload = function (e) {
                   const pdfDataUrl = e.target.result; // This is the data URL
+
                   // Save PDF Data URL
                   localStorage.setItem("previewPdfDataUrl", pdfDataUrl);
+
                   // Save Form Data
                   localStorage.setItem(
                     "previewFormData",
                     JSON.stringify(state.form)
                   );
+
                   // Save Project Data
                   localStorage.setItem(
                     "previewProjectData",
                     JSON.stringify(state.projectData)
                   );
-                  // ✅ Calculate and save shopData
+
+                  // Save shopData
                   const quantity = state.form.quantity || 0;
                   const originalTotalCost =
                     state.result?.original_total_cost ??
@@ -1594,13 +1597,19 @@ const DesignProjectPreview = () => {
                       costPerBook: state.result?.cost_per_book ?? 0,
                     })
                   );
+
                   // Save the actual File objects for final submission
                   window.tempBookFileForSubmission = state.selectedFile;
                   if (state.coverFile) {
                     window.tempCoverFileForSubmission = state.coverFile;
                   }
+
                   // Navigate to preview
-                  router.push("/book-preview");
+                  const targetUrl = isEditUrl
+                    ? "/book-preview?edit=true"
+                    : "/book-preview";
+
+                  router.push(targetUrl);
                 };
                 reader.onerror = function () {
                   alert("Failed to prepare PDF for preview.");
@@ -1611,7 +1620,6 @@ const DesignProjectPreview = () => {
             >
               Preview Your Book
             </button>
-
           </div>
         </div>
       </div>
