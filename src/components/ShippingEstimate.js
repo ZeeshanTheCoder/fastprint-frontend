@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "@/services/baseUrl";
@@ -18,7 +18,7 @@ const ShippingEstimate = () => {
 
   // Get token from localStorage
   const getToken = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       return localStorage.getItem("accessToken");
     }
     return null;
@@ -110,7 +110,9 @@ const ShippingEstimate = () => {
 
   return (
     <div className="mt-6 p-4 bg-white border border-blue-200 rounded-lg shadow-sm">
-      <h3 className="font-semibold text-blue-700 text-lg mb-4">Shipping Estimate</h3>
+      <h3 className="font-semibold text-blue-700 text-lg mb-4">
+        Shipping Estimate
+      </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         <input
@@ -167,18 +169,25 @@ const ShippingEstimate = () => {
           </label>
           <select
             className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={selectedOption?.service || ""}
+            value={
+              selectedOption
+                ? `${selectedOption.service}-${selectedOption.courier_name}`
+                : ""
+            }
             onChange={(e) => {
               const selected = shippingOptions.find(
-                (opt) => opt.service === e.target.value
+                (opt) => `${opt.service}-${opt.courier_name}` === e.target.value
               );
-              setSelectedOption(selected);
+              setSelectedOption(selected || null);
             }}
             disabled={loading}
           >
             <option value="">-- Select Shipping Method --</option>
             {shippingOptions.map((option, index) => (
-              <option key={index} value={option.service}>
+              <option
+                key={index}
+                value={`${option.service}-${option.courier_name}`}
+              >
                 {option.courier_name} - {option.service} — ${option.rate} —{" "}
                 {option.estimated_days}
               </option>
@@ -188,11 +197,14 @@ const ShippingEstimate = () => {
           {selectedOption && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-blue-800 font-medium text-sm md:text-base">
-                Shipping Rate: <span className="font-bold">${selectedOption.rate}</span>
+                Shipping Rate:{" "}
+                <span className="font-bold">${selectedOption.rate}</span>
               </p>
               <p className="text-blue-800 font-medium text-sm md:text-base">
                 Estimated Delivery:{" "}
-                <span className="font-bold">{selectedOption.estimated_days}</span>
+                <span className="font-bold">
+                  {selectedOption.estimated_days}
+                </span>
               </p>
               <p className="text-blue-800 text-xs mt-2">
                 Carrier: {selectedOption.courier_name}
