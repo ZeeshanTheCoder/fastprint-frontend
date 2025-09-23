@@ -784,19 +784,24 @@ const ThesisPricingCalculator = () => {
                   (form.pageCount * form.quantity).toString() || "-",
                 ],
               ].map(([label1, value1, label2, value2], i) => (
-                <div key={i}>
-                  <div className="flex justify-between mb-1">
-                    <div>
+                <React.Fragment key={i}>
+                  <div className="flex justify-between items-start mb-1 text-sm">
+                    {/* LEFT COLUMN */}
+                    <div className="text-left">
                       <p className="font-semibold text-gray-600">{label1}</p>
                       <p className="text-black">{value1}</p>
                     </div>
-                    <div>
+
+                    {/* RIGHT COLUMN */}
+                    <div className="text-right">
                       <p className="font-semibold text-gray-600">{label2}</p>
                       <p className="text-black">{value2}</p>
                     </div>
                   </div>
-                  <div className="w-full h-px bg-gray-200"></div>
-                </div>
+
+                  {/* Divider after each row except last */}
+                  <div className="w-full h-px bg-gray-200 my-2"></div>
+                </React.Fragment>
               ))}
             </div>
 

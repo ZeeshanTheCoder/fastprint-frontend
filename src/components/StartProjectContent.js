@@ -59,13 +59,7 @@ const productCards = [
     description: "Organize your daily, weekly, or monthly schedule.",
     calculator: "CalendarCalculator",
   },
-  {
-    id: 7,
-    image: Image7,
-    title: "e Book",
-    description: "Showcase your work in a professional digital format.",
-    calculator: "EBookCalculator",
-  },
+ 
 ];
 
 const StartProjectContent = () => {

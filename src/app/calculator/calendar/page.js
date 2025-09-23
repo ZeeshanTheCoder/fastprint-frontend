@@ -208,16 +208,25 @@ const OptionSection = ({ title, options, fieldName, fieldValue, onSelect, stepAc
   </>
 );
 
-const SummaryRow = ({ pairs }) => (
-  <div className="flex justify-between mb-2 text-sm">
-    {pairs.map(([label, value], j) => (
-      <div key={j}>
-        <p className="font-semibold text-gray-600">{label}</p>
-        <p className="text-black">{value}</p>
+const SummaryRow = ({ pairs }) => {
+  const [leftPair, rightPair] = pairs;
+
+  return (
+    <div className="flex justify-between items-center mb-2 text-sm">
+      {/* Left-aligned item */}
+      <div>
+        <p className="font-semibold text-gray-600">{leftPair[0]}</p>
+        <p className="text-black">{leftPair[1]}</p>
       </div>
-    ))}
-  </div>
-);
+
+      {/* Right-aligned item */}
+      <div className="text-right">
+        <p className="font-semibold text-gray-600">{rightPair[0]}</p>
+        <p className="text-black">{rightPair[1]}</p>
+      </div>
+    </div>
+  );
+};
 
 const CalendarCalculator = () => {
   const [form, setForm] = useState({

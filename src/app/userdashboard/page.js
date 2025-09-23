@@ -27,6 +27,7 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState(null);
 
   // Helper function to get user-specific cart key
   const getUserCartKey = () => {
@@ -36,7 +37,21 @@ const UserDashboard = () => {
   // Helper function to get user-specific cart
   const getUserCart = () => {
     const cartKey = getUserCartKey();
-    return JSON.parse(localStorage.getItem(cartKey)) || [];
+    const storedCart = localStorage.getItem(cartKey);
+
+    if (!storedCart) {
+      return []; // ✅ Return empty array if nothing stored
+    }
+
+    try {
+      return JSON.parse(storedCart) || []; // ✅ Parse only if it exists
+    } catch (error) {
+      console.warn(
+        "Failed to parse cart from localStorage. Resetting to empty array.",
+        error
+      );
+      return []; // ✅ Fallback on parse error
+    }
   };
 
   // Helper function to save user-specific cart
@@ -81,6 +96,17 @@ const UserDashboard = () => {
     const fetchBooks = async () => {
       const token = localStorage.getItem("accessToken");
 
+      // Validate token
+      if (!token) {
+        console.error("No access token. Redirecting to login...");
+        router.push("/login");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null); // if you add error state later
+
       try {
         const response = await axios.get(`${BASE_URL}api/book/my-books/`, {
           headers: {
@@ -88,22 +114,43 @@ const UserDashboard = () => {
           },
         });
 
-        // Get user-specific cart project IDs
+        // Validate response structure
+        if (!Array.isArray(response.data?.data)) {
+          throw new Error("Invalid response format: expected data.data array");
+        }
+
         const cart = getUserCart();
         const cartIds = cart.map((item) => item.id);
 
-        // Filter out books already in user's cart
-        const availableBooks = (response.data.data || []).filter(
+        const availableBooks = response.data.data.filter(
           (book) => !cartIds.includes(book.id)
         );
 
         setBooks(availableBooks);
         setFilteredBooks(availableBooks);
       } catch (error) {
-        console.error(
-          "Failed to fetch books:",
-          error.response?.data || error.message
-        );
+        // 🔍 DEBUG: Log everything
+        console.group("🚨 Fetch Books Error Details");
+        console.error("Raw error object:", error);
+        console.error("Type:", typeof error);
+        console.error("Keys:", Object.keys(error));
+        console.error("Message:", error.message);
+        console.error("Response:", error.response);
+        console.error("Response data:", error.response?.data);
+        console.groupEnd();
+
+        // 🧭 User-friendly message
+        const userMessage =
+          error.response?.data?.message ||
+          error.response?.data?.detail ||
+          error.message ||
+          "Failed to load your projects. Please try again later.";
+
+        console.error("Failed to fetch books:", userMessage);
+
+        // Optionally set error state for UI
+        // setError(userMessage);
+
         setBooks([]);
         setFilteredBooks([]);
       } finally {
