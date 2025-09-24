@@ -91,7 +91,7 @@ const CoverExpert = () => {
     try {
       const apiData = new FormData();
 
-      // Retrieve dropdown options and form data from localStorage
+      // ✅ Retrieve all necessary data from localStorage
       const bindings = JSON.parse(localStorage.getItem("bindings") || "[]");
       const coverFinishes = JSON.parse(
         localStorage.getItem("cover_finishes") || "[]"
@@ -108,25 +108,25 @@ const CoverExpert = () => {
         localStorage.getItem("projectData") || "{}"
       );
 
-      const binding =
-        bindings.find((b) => String(b.id) === String(designForm.binding_id))
-          ?.name || "";
-      const coverFinish =
-        coverFinishes.find(
-          (cf) => String(cf.id) === String(designForm.cover_finish_id)
-        )?.name || "";
-      const interiorColor =
-        interiorColors.find(
-          (ic) => String(ic.id) === String(designForm.interior_color_id)
-        )?.name || "";
-      const paperType =
-        paperTypes.find(
-          (pt) => String(pt.id) === String(designForm.paper_type_id)
-        )?.name || "";
-      const trimSize =
-        trimSizes.find(
-          (ts) => String(ts.id) === String(designForm.trim_size_id)
-        )?.name || "";
+      // Helper to safely get name by ID
+      const getNameById = (options, id) => {
+        if (!id) return "";
+        const opt = options.find((opt) => String(opt.id) === String(id));
+        return opt ? opt.name : "";
+      };
+
+      // Map IDs to names
+      const binding = getNameById(bindings, designForm.binding_id);
+      const coverFinish = getNameById(
+        coverFinishes,
+        designForm.cover_finish_id
+      );
+      const interiorColor = getNameById(
+        interiorColors,
+        designForm.interior_color_id
+      );
+      const paperType = getNameById(paperTypes, designForm.paper_type_id);
+      const trimSize = getNameById(trimSizes, designForm.trim_size_id);
 
       // Append book metadata
       apiData.append("title", projectData.projectTitle || "");

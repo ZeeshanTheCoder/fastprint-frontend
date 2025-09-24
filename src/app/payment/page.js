@@ -537,7 +537,7 @@ const Payment = () => {
                 <p className="text-xs md:text-sm text-gray-700 text-center">
                   <strong>Payment Method:</strong>{" "}
                   {paymentMethod === "credit_card"
-                    ? "Credit Card (Stripe)"
+                    ? "Credit Card"
                     : "PayPal"}
                 </p>
               </div>

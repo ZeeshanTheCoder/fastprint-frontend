@@ -3,7 +3,7 @@
 import StartProjectContent from "@/components/StartProjectContent";
 import { Suspense } from "react";
 
-const BookPreview = () => {
+const StartProject = () => {
   return (
     <Suspense
       fallback={
@@ -17,4 +17,4 @@ const BookPreview = () => {
   );
 };
 
-export default BookPreview;
+export default StartProject;

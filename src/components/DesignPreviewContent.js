@@ -351,6 +351,23 @@ const FileUpload = ({
         </>
       )}
     </div>
+
+    <div className="text-[#2A428C] font-semibold text-xs md:text-sm uppercase tracking-wide mt-10">
+      Requirements:
+    </div>
+    <div className="text-[#4183C3] font-semibold text-xs md:text-sm uppercase tracking-wide">
+      File Type: <span className="text-gray-800 font-semibold">PDF</span>
+    </div>
+    <div className="text-[#4183C3] font-semibold text-xs md:text-sm uppercase tracking-wide">
+      Page Count:{" "}
+      <span className="text-gray-800 font-semibold">2 - 800 pages</span>
+    </div>
+    <div className="text-[#4183C3] font-semibold text-xs md:text-sm uppercase tracking-wide">
+      Fonts: <span className="text-gray-800 font-semibold">Embedded</span>
+    </div>
+    <div className="text-[#4183C3] font-semibold text-xs md:text-sm uppercase tracking-wide">
+      Layers: <span className="text-gray-800 font-semibold">Flattened</span>
+    </div>
   </div>
 );
 
@@ -593,11 +610,6 @@ const DesignProjectPreview = () => {
   };
 
   useEffect(() => {
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     if (!state.projectData?.category) return;
     const cfg = buildLocalConfig(state.projectData?.category);
     updateState({
@@ -800,8 +812,75 @@ const DesignProjectPreview = () => {
   };
 
   const handleContactExpert = () => {
+    const isCalendar = isCalendarCategory(state.projectData?.category);
+    const requiredFields = isCalendar
+      ? ["binding_id", "interior_color_id", "paper_type_id", "cover_finish_id"]
+      : [
+          "trim_size_id",
+          "page_count",
+          "binding_id",
+          "interior_color_id",
+          "paper_type_id",
+          "cover_finish_id",
+        ];
+
+    const missingFields = requiredFields.filter(
+      (field) => !state.form[field] || String(state.form[field]).trim() === ""
+    );
+
+    if (missingFields.length > 0) {
+      alert(
+        "Please complete all book configuration options before contacting the cover expert."
+      );
+      return;
+    }
+
+    if (!state.selectedFile) {
+      alert(
+        "Please upload your book PDF file before contacting the cover expert."
+      );
+      return;
+    }
+
+    // ✅ Save design + project data
     localStorage.setItem("designForm", JSON.stringify(state.form));
     localStorage.setItem("projectData", JSON.stringify(state.projectData));
+    localStorage.setItem("bindings", JSON.stringify(state.bindings));
+    localStorage.setItem(
+      "interior_colors",
+      JSON.stringify(state.dropdowns.interior_colors || [])
+    );
+    localStorage.setItem(
+      "paper_types",
+      JSON.stringify(state.dropdowns.paper_types || [])
+    );
+    localStorage.setItem(
+      "cover_finishes",
+      JSON.stringify(state.dropdowns.cover_finishes || [])
+    );
+    localStorage.setItem(
+      "trim_sizes",
+      JSON.stringify(state.dropdowns.trim_sizes || [])
+    );
+
+    // ✅ ALSO SAVE shopData (pricing info) so it survives to /shop
+    const quantity = state.form.quantity || 1;
+    const originalTotalCost =
+      state.result?.original_total_cost ??
+      (state.result?.cost_per_book ?? 0) * quantity;
+    const finalTotalCost = state.result?.total_cost ?? originalTotalCost;
+
+    localStorage.setItem(
+      "shopData",
+      JSON.stringify({
+        originalTotalCost: state.result?.original_total_cost ?? 0,
+        finalTotalCost: state.result?.total_cost ?? 0,
+        totalCost: state.result?.total_cost ?? 0,
+        initialQuantity: state.form.quantity,
+        costPerBook: state.result?.cost_per_book ?? 0,
+      })
+    );
+
     updateState({ usedExpertCover: true });
     router.push("/cover-expert");
   };
