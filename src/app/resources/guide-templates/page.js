@@ -387,7 +387,7 @@ const GuideTemplate = () => {
                   A5
                 </div>
                 <div className="text-sm text-gray-500 group-hover:text-white">
-                  8.83 X 8.27 In | 148 X 210 Ym
+                  5.83 X 8.27 In | 148 X 210 Ym
                 </div>
               </div>
               <div className="h-px bg-gray-200 group-hover:bg-white my-4 transition-all duration-300"></div>

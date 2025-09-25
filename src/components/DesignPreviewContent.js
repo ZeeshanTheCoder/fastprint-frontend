@@ -811,6 +811,61 @@ const DesignProjectPreview = () => {
     updateState({ result });
   };
 
+  // =========== Book Size Handling ==============
+
+  // Helper: Parse size string like "5 x 8 in" or "127 x 203 mm"
+  const parseSizeString = (sizeStr) => {
+    const inchMatch = sizeStr.match(/([\d.]+)\s*x\s*([\d.]+)\s*in/);
+    if (inchMatch) {
+      return {
+        width: parseFloat(inchMatch[1]),
+        height: parseFloat(inchMatch[2]),
+        unit: "in",
+      };
+    }
+    const mmMatch = sizeStr.match(/([\d.]+)\s*x\s*([\d.]+)\s*mm/);
+    if (mmMatch) {
+      return {
+        width: parseFloat(mmMatch[1]),
+        height: parseFloat(mmMatch[2]),
+        unit: "mm",
+      };
+    }
+    return null;
+  };
+
+  // Helper: Convert PDF page size (in points) to inches
+  const pointsToInches = (points) => points / 72;
+
+  // Helper: Match detected size to BOOK_SIZES
+  const findClosestBookSize = (widthIn, heightIn) => {
+    const toleranceIn = 0.15; // ±0.15 inch tolerance
+    for (const sizeName of BOOK_SIZES) {
+      const parsed = parseSizeString(sizeName);
+      if (!parsed) continue;
+
+      let targetW = parsed.width;
+      let targetH = parsed.height;
+      if (parsed.unit === "mm") {
+        targetW /= 25.4;
+        targetH /= 25.4;
+      }
+
+      // Check both orientations (portrait/landscape)
+      const match1 =
+        Math.abs(widthIn - targetW) <= toleranceIn &&
+        Math.abs(heightIn - targetH) <= toleranceIn;
+      const match2 =
+        Math.abs(widthIn - targetH) <= toleranceIn &&
+        Math.abs(heightIn - targetW) <= toleranceIn;
+
+      if (match1 || match2) {
+        return sizeName;
+      }
+    }
+    return null;
+  };
+
   const handleContactExpert = () => {
     const isCalendar = isCalendarCategory(state.projectData?.category);
     const requiredFields = isCalendar
@@ -897,7 +952,6 @@ const DesignProjectPreview = () => {
       uploadStatus: "idle",
       uploadProgress: 0,
     });
-
     if (!file) return;
     if (file.type !== "application/pdf") {
       updateState({
@@ -906,11 +960,8 @@ const DesignProjectPreview = () => {
       });
       return;
     }
-
     updateState({ uploadStatus: "uploading" });
-
     try {
-      // ✅ Load pdfjsLib only when needed, in the browser
       const pdfjs = await loadPdfLib();
       if (!pdfjs) {
         updateState({
@@ -926,7 +977,6 @@ const DesignProjectPreview = () => {
           const typedarray = new Uint8Array(this.result);
           const pdf = await pdfjs.getDocument({ data: typedarray }).promise;
           const pageCount = pdf.numPages;
-
           if (pageCount < 2 || pageCount > 800) {
             updateState({
               fileError: "Page count must be between 2 and 800.",
@@ -935,7 +985,32 @@ const DesignProjectPreview = () => {
             return;
           }
 
-          updateForm({ page_count: pageCount });
+          // ✅ Get first page size
+          const firstPage = await pdf.getPage(1);
+          const { width, height } = firstPage.getViewport({ scale: 1 });
+          const widthIn = pointsToInches(width);
+          const heightIn = pointsToInches(height);
+
+          // ✅ Match to BOOK_SIZES
+          const matchedSizeName = findClosestBookSize(widthIn, heightIn);
+
+          // ✅ Find corresponding trim_size_id
+          let matchedId = "";
+          if (matchedSizeName) {
+            const trimOption = state.dropdowns.trim_sizes?.find(
+              (opt) => opt.name === matchedSizeName
+            );
+            if (trimOption) {
+              matchedId = trimOption.id;
+            }
+          }
+
+          // ✅ Update form with page count and (if found) trim size
+          updateForm({
+            page_count: pageCount,
+            ...(matchedId && { trim_size_id: matchedId }),
+          });
+
           updateState({ selectedFile: file, uploadStatus: "success" });
         } catch (err) {
           console.error("PDF parsing error:", err);
@@ -1593,6 +1668,18 @@ const DesignProjectPreview = () => {
               }`}
             >
               Contact Cover Design Expert
+            </button>
+
+            <button
+              onClick={() => {
+                router.push("/resources/guide-templates");
+              }}
+              disabled={!!state.coverFile}
+              className={`w-full max-w-md md:max-w-lg lg:max-w-xl px-6 md:px-10 py-2 md:py-3 bg-gradient-to-r from-[#0a79f8] to-[#1e78ee] text-white font-medium text-sm md:text-base rounded-full shadow-md hover:shadow-lg transition ${
+                state.coverFile ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              Check Cover Design Guidelines
             </button>
 
             <button
