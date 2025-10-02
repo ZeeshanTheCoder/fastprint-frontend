@@ -108,7 +108,7 @@ const UserDashboard = () => {
       setError(null); // if you add error state later
 
       try {
-        const response = await axios.get(`${BASE_URL}api/book/my-books/`, {
+        const response = await axios.get(`${BASE_URL}api/book/book-projects/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
