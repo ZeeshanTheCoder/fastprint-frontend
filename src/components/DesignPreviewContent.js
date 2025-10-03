@@ -931,7 +931,7 @@ const DesignProjectPreview = () => {
         originalTotalCost: state.result?.original_total_cost ?? 0,
         finalTotalCost: state.result?.total_cost ?? 0,
         totalCost: state.result?.total_cost ?? 0,
-        initialQuantity: state.form.quantity,
+        productQuantity: state.form.quantity ,
         costPerBook: state.result?.cost_per_book ?? 0,
       })
     );
@@ -1173,7 +1173,7 @@ const DesignProjectPreview = () => {
             originalTotalCost: state.result?.original_total_cost ?? 0,
             finalTotalCost: state.result?.total_cost ?? 0,
             totalCost: state.result?.total_cost ?? 0,
-            initialQuantity: state.form.quantity,
+            productQuantity: state.form.quantity,
             costPerBook: state.result?.cost_per_book ?? 0,
           })
         );
@@ -1275,7 +1275,7 @@ const DesignProjectPreview = () => {
             originalTotalCost: state.result?.original_total_cost ?? 0,
             finalTotalCost: state.result?.total_cost ?? 0,
             totalCost: state.result?.total_cost ?? 0,
-            initialQuantity: state.form.quantity,
+            productQuantity: state.form.quantity,
             costPerBook: state.result?.cost_per_book ?? 0,
           })
         );
@@ -1746,6 +1746,18 @@ const DesignProjectPreview = () => {
                     JSON.stringify(state.projectData)
                   );
 
+                  // Save dropdowns needed later to resolve option names at /shop
+                  localStorage.setItem(
+                    "previewDropdowns",
+                    JSON.stringify({
+                      bindings: state.bindings || [],
+                      interior_colors: state.dropdowns.interior_colors || [],
+                      paper_types: state.dropdowns.paper_types || [],
+                      cover_finishes: state.dropdowns.cover_finishes || [],
+                      trim_sizes: state.dropdowns.trim_sizes || [],
+                    })
+                  );
+
                   // Save shopData
                   const quantity = state.form.quantity || 0;
                   const originalTotalCost =
@@ -1759,7 +1771,7 @@ const DesignProjectPreview = () => {
                       originalTotalCost: state.result?.original_total_cost ?? 0,
                       finalTotalCost: state.result?.total_cost ?? 0,
                       totalCost: state.result?.total_cost ?? 0,
-                      initialQuantity: state.form.quantity,
+                      productQuantity: state.form.quantity,
                       costPerBook: state.result?.cost_per_book ?? 0,
                     })
                   );

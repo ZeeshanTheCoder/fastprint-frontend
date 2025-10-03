@@ -277,6 +277,54 @@ const OrderInfo = () => {
             </InfoCard>
           </div>
 
+          {/* Shipping & Checkout Details */}
+          <div className="mt-8">
+            <InfoCard
+              title="Shipping & Checkout Details"
+              icon={<Package className="w-5 h-5" />}
+              bgColor="from-blue-50 to-indigo-50"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InfoItem icon={<User />} label="First Name" value={orderData.first_name} />
+                <InfoItem icon={<User />} label="Last Name" value={orderData.last_name} />
+                <InfoItem icon={<Info />} label="Company" value={orderData.company} />
+                <InfoItem icon={<Info />} label="Phone Number" value={orderData.phone_number} />
+                <InfoItem icon={<Info />} label="Address" value={orderData.address} />
+                <InfoItem icon={<Info />} label="Apt/Floor/Suite" value={orderData.apt_floor} />
+                <InfoItem icon={<Globe />} label="Country" value={orderData.country} />
+                <InfoItem icon={<Info />} label="State/Province" value={orderData.state} />
+                <InfoItem icon={<Info />} label="City" value={orderData.city} />
+                <InfoItem icon={<Info />} label="Postal Code" value={orderData.postal_code} />
+                <InfoItem icon={<Info />} label="Account Type" value={orderData.account_type} />
+                <InfoItem icon={<Info />} label="Resale Certificate" value={orderData.has_resale_cert ? 'Yes' : 'No'} />
+                <InfoItem icon={<Info />} label="Courier Name" value={orderData.courier_name} />
+                <InfoItem icon={<Info />} label="Estimated Delivery" value={orderData.estimated_delivery} />
+                <InfoItem icon={<Info />} label="Shipping Rate" value={typeof orderData.shipping_rate === 'number' ? `$${orderData.shipping_rate.toFixed(2)}` : (orderData.shipping_rate ?? '—')} />
+                <InfoItem icon={<Info />} label="Tax" value={typeof orderData.tax === 'number' ? `$${orderData.tax.toFixed(2)}` : (orderData.tax ?? '—')} />
+                <InfoItem icon={<Package />} label="Quantity" value={orderData.product_quantity} />
+                <InfoItem icon={<Package />} label="Unit Price" value={typeof orderData.product_price === 'number' ? `$${orderData.product_price.toFixed(2)}` : (orderData.product_price ?? '—')} />
+                <InfoItem icon={<Package />} label="Subtotal" value={typeof orderData.subtotal === 'number' ? `$${orderData.subtotal.toFixed(2)}` : (orderData.subtotal ?? '—')} />
+              </div>
+
+              {/* Selected Service (raw details) */}
+              {orderData.selected_service && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Selected Service Details</p>
+                  <pre className="text-xs bg-gray-50 border border-gray-200 rounded-md p-3 overflow-x-auto">
+{(() => {
+  try {
+    const parsed = typeof orderData.selected_service === 'string' ? JSON.parse(orderData.selected_service) : orderData.selected_service;
+    return JSON.stringify(parsed, null, 2);
+  } catch (e) {
+    return String(orderData.selected_service);
+  }
+})()}
+                  </pre>
+                </div>
+              )}
+            </InfoCard>
+          </div>
+
           <div className="mt-8">
             <InfoCard
               title="Uploaded Files"

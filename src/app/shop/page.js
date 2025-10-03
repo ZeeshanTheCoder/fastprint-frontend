@@ -764,7 +764,7 @@ const Shop = () => {
     originalTotalCost: 0,
     finalTotalCost: 0,
     totalCost: 0,
-    initialQuantity: 1,
+    productQuantity: 1,
     costPerBook: 0,
   });
 
@@ -777,7 +777,7 @@ const Shop = () => {
           originalTotalCost: data.originalTotalCost ?? 0,
           finalTotalCost: data.finalTotalCost ?? 0,
           totalCost: data.totalCost ?? 0,
-          initialQuantity: data.initialQuantity ?? 1,
+          productQuantity: data.productQuantity ?? 1,
           costPerBook: data.costPerBook ?? 0,
         });
       } catch (e) {
@@ -791,7 +791,7 @@ const Shop = () => {
     originalTotalCost = 0,
     finalTotalCost = 0,
     totalCost = 0,
-    initialQuantity = 1,
+    productQuantity = 1,
     costPerBook = 0,
   } = initialData;
 
@@ -800,8 +800,8 @@ const Shop = () => {
 
   // Calculate cost per book
   const calculatedCostPerBook =
-    displayTotalCost && initialQuantity
-      ? displayTotalCost / initialQuantity
+    displayTotalCost && productQuantity
+      ? displayTotalCost / productQuantity
       : costPerBook;
 
   const [form, setForm] = useState({
@@ -946,7 +946,7 @@ const Shop = () => {
   }, [form.country]);
 
   // Dynamic quantity state
-  const [productQuantity, setProductQuantity] = useState(initialQuantity || 1);
+  // const [productQuantity, setProductQuantity] = useState(initialQuantity);
   const productPrice = calculatedCostPerBook;
   const subtotal = finalTotalCost;
 
@@ -987,38 +987,83 @@ const Shop = () => {
     }
 
     try {
+      // Collect design and project data saved earlier
+      const previewForm = localStorage.getItem("previewFormData");
+      const previewProject = localStorage.getItem("previewProjectData");
+      const bookFile = window.tempBookFileForSubmission;
+      const coverFile = window.tempCoverFileForSubmission;
+
+      if (!previewForm || !previewProject || !bookFile) {
+        alert("Missing design or file data. Please go back to Design Project.");
+        router.push("/design-project");
+        return;
+      }
+
+      const formData = new FormData();
+      const design = JSON.parse(previewForm);
+      const project = JSON.parse(previewProject);
+
+      // Project basics
+      formData.append("title", project.projectTitle || "");
+      formData.append("category", project.category);
+      formData.append("language", project.language);
+      formData.append("pdf_file", bookFile);
+      if (coverFile) formData.append("cover_file", coverFile);
+
+      // Resolve names from stored dropdowns
+      const drop = JSON.parse(localStorage.getItem("previewDropdowns") || "{}");
+      const findName = (arr, id) => {
+        if (!arr || !id) return "";
+        const m = (arr || []).find((o) => String(o.id) === String(id));
+        return m?.dbName || m?.name || "";
+      };
+      formData.append("binding_type", findName(drop.bindings, design.binding_id));
+      formData.append("cover_finish", findName(drop.cover_finishes, design.cover_finish_id));
+      formData.append("interior_color", findName(drop.interior_colors, design.interior_color_id));
+      formData.append("paper_type", findName(drop.paper_types, design.paper_type_id));
+      if (project.category !== "Calendar" && project.category !== "Calender") {
+        formData.append("trim_size", findName(drop.trim_sizes, design.trim_size_id));
+      }
+      formData.append("page_count", design.page_count || 1);
+
+      // Shipping + account details
+      formData.append("first_name", form.first_name);
+      formData.append("last_name", form.last_name);
+      formData.append("company", form.company);
+      formData.append("address", form.address);
+      formData.append("apt_floor", form.apt_floor);
+      formData.append("country", form.country);
+      formData.append("state", form.state);
+      formData.append("city", form.city);
+      formData.append("postal_code", form.postal_code);
+      formData.append("phone_number", form.phone_number);
+      formData.append("account_type", form.account_type);
+      formData.append("has_resale_cert", form.has_resale_cert);
+
+      // Shipping outcome
+      if (selectedService) formData.append("selected_service", JSON.stringify(selectedService));
+      if (courierName) formData.append("courier_name", courierName);
+      if (estimatedDelivery) formData.append("estimated_delivery", estimatedDelivery);
+      const toMoney = (v) => (v === null || v === undefined || isNaN(v) ? "" : Number(v).toFixed(2));
+      if (shippingRate !== null) formData.append("shipping_rate", toMoney(shippingRate));
+      if (tax !== null) formData.append("tax", toMoney(tax));
+
+      // Pricing summary
+      formData.append("product_quantity", String(productQuantity));
+      formData.append("product_price", toMoney(productPrice || 0));
+      formData.append("subtotal", toMoney(subtotal || 0));
+
       await axios.post(
-        `${BASE_URL}api/save-shipping/`,
-        {
-          user_address: {
-            first_name: form.first_name,
-            last_name: form.last_name,
-            company: form.company,
-            address: form.address,
-            apt_floor: form.apt_floor,
-            country: form.country,
-            state: form.state,
-            city: form.city,
-            postal_code: form.postal_code,
-            phone_number: form.phone_number,
-            account_type: form.account_type,
-            has_resale_cert: form.has_resale_cert,
-          },
-          shipping_rate: shippingRate,
-          tax: tax,
-          product_quantity: productQuantity,
-          product_price: productPrice,
-          subtotal: subtotal,
-          selected_service: selectedService,
-        },
+        `${BASE_URL}api/book/save-order/`,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-      alert("Shipping information saved!");
+      alert("Order saved successfully!");
 
       // Navigate to payment page with all calculated values
       localStorage.setItem(
@@ -1594,3 +1639,4 @@ const Shop = () => {
 };
 
 export default Shop;
+  
