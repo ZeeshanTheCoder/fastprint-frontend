@@ -15,6 +15,8 @@ import {
   FaArrowLeft,
 } from "react-icons/fa";
 import useAuth from "@/hooks/useAuth";
+import axios from "axios";
+import { BASE_URL } from "@/services/baseUrl";
 
 const Orders = () => {
   const router = useRouter();
@@ -44,17 +46,25 @@ const Orders = () => {
 
   useEffect(() => {
     if (user) {
-      const cart = getUserCart();
-      setProjects(cart);
-      setFilteredProjects(cart);
-
+      const token = localStorage.getItem("accessToken");
+      axios.get(`${BASE_URL}api/book/user-paid-orders/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((response) => {
+          setProjects(response.data.data);
+          setFilteredProjects(response.data.data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setProjects([]);
+          setFilteredProjects([]);
+          setLoading(false);
+        });
       // Clean up old generic cart data if it exists
       const oldCart = localStorage.getItem("cart");
       if (oldCart) {
         localStorage.removeItem("cart");
       }
-
-      setLoading(false);
     }
   }, [user]);
 
@@ -127,7 +137,7 @@ const Orders = () => {
           <div className="relative">
             <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#016AB3]/20 border-t-[#016AB3]" />
             <div
-              className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#0096CD] animate-spin"
+              className="absolute inset-0 rounded-full border-4 border-transparent animate-spin"
               style={{ animationDuration: "0.8s" }}
             />
           </div>
@@ -256,23 +266,6 @@ const Orders = () => {
                 </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-xl md:rounded-2xl shadow-lg p-4 md:p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                    Total Value
-                  </p>
-                  <p className="text-2xl md:text-4xl font-bold text-emerald-600 mt-1 md:mt-2">
-                    $0.00
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">Estimated cost</p>
-                </div>
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg">
-                  <FaCheckCircle className="text-white text-lg md:text-xl" />
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Enhanced Main Table Card */}
@@ -362,9 +355,7 @@ const Orders = () => {
                     <th className="px-6 md:px-8 py-4 md:py-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 md:px-8 py-4 md:py-6 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                      Actions
-                    </th>
+
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -372,9 +363,8 @@ const Orders = () => {
                     filteredProjects.map((project, index) => (
                       <tr
                         key={project.id}
-                        className={`hover:bg-gradient-to-r hover:from-[#F8FAFF] hover:to-[#F0F7FF] transition-all duration-300 group ${
-                          index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                        }`}
+                        className={`hover:bg-gradient-to-r hover:from-[#F8FAFF] hover:to-[#F0F7FF] transition-all duration-300 group ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                          }`}
                       >
                         <td className="px-6 md:px-8 py-4 md:py-6">
                           <div className="flex items-center">
@@ -405,14 +395,6 @@ const Orders = () => {
                             <div className="w-2 h-2 bg-orange-500 rounded-full mr-2 animate-pulse"></div>
                             In Cart
                           </div>
-                        </td>
-                        <td className="px-6 md:px-8 py-4 md:py-6 text-center">
-                          <button
-                            onClick={() => handleRemoveFromCart(project.id)}
-                            className="p-2 md:p-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg md:rounded-xl transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md group"
-                          >
-                            <FaTrash className="text-xs md:text-sm group-hover:scale-110 transition-transform" />
-                          </button>
                         </td>
                       </tr>
                     ))

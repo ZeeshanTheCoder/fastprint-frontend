@@ -236,6 +236,76 @@ const Payment = () => {
     }
   };
 
+  // After payment success:
+  const handleOrderAfterPayment = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const pendingOrder = JSON.parse(localStorage.getItem("pendingOrderData"));
+      if (!pendingOrder) {
+        alert("Missing order data. Please go back to Shop.");
+        router.push("/shop");
+        return;
+      }
+      const formData = new FormData();
+      const design = JSON.parse(pendingOrder.previewForm);
+      const project = JSON.parse(pendingOrder.previewProject);
+      const bookFile = window.tempBookFileForSubmission;
+      const coverFile = window.tempCoverFileForSubmission;
+      formData.append("title", project.projectTitle || "");
+      formData.append("category", project.category);
+      formData.append("language", project.language);
+      formData.append("pdf_file", bookFile);
+      if (coverFile) formData.append("cover_file", coverFile);
+      const drop = JSON.parse(localStorage.getItem("previewDropdowns") || "{}");
+      const findName = (arr, id) => {
+        if (!arr || !id) return "";
+        const m = (arr || []).find((o) => String(o.id) === String(id));
+        return m?.dbName || m?.name || "";
+      };
+      formData.append("binding_type", findName(drop.bindings, design.binding_id));
+      formData.append("cover_finish", findName(drop.cover_finishes, design.cover_finish_id));
+      formData.append("interior_color", findName(drop.interior_colors, design.interior_color_id));
+      formData.append("paper_type", findName(drop.paper_types, design.paper_type_id));
+      if (project.category !== "Calendar" && project.category !== "Calender") {
+        formData.append("trim_size", findName(drop.trim_sizes, design.trim_size_id));
+      }
+      formData.append("page_count", design.page_count || 1);
+      // Shipping + account details
+      Object.entries(pendingOrder.form).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      // Shipping outcome
+      if (pendingOrder.selectedService) formData.append("selected_service", JSON.stringify(pendingOrder.selectedService));
+      if (pendingOrder.courierName) formData.append("courier_name", pendingOrder.courierName);
+      if (pendingOrder.estimatedDelivery) formData.append("estimated_delivery", pendingOrder.estimatedDelivery);
+      const toMoney = (v) => (v === null || v === undefined || isNaN(v) ? "" : Number(v).toFixed(2));
+      if (pendingOrder.shippingRate !== null) formData.append("shipping_rate", toMoney(pendingOrder.shippingRate));
+      if (pendingOrder.tax !== null) formData.append("tax", toMoney(pendingOrder.tax));
+      // Pricing summary
+      formData.append("product_quantity", String(pendingOrder.productQuantity));
+      formData.append("product_price", toMoney(pendingOrder.productPrice || 0));
+      formData.append("subtotal", toMoney(pendingOrder.subtotal || 0));
+      // Set order_status to 'paid'
+      formData.append("order_status", "paid");
+      await axios.post(
+        `${BASE_URL}api/book/save-order/`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      // Clean up
+      localStorage.removeItem("pendingOrderData");
+      router.push("/success");
+    } catch (error) {
+      console.error("Order save after payment error:", error.response?.data || error.message);
+      alert("Failed to save order after payment. Please contact support.");
+    }
+  };
+
   // Cancel button handlers
   const handleEditClick = () => {
     router.back();
@@ -343,7 +413,8 @@ const Payment = () => {
                         cart.push({ ...projectData, paid: true, paidAt: new Date().toISOString() });
                         localStorage.setItem(cartKey, JSON.stringify(cart));
                       }
-                      router.push("/success");
+                      // Call handleOrderAfterPayment() after payment is successful (Stripe/PayPal onSuccess callback)
+                      handleOrderAfterPayment();
                     }}
                     onError={(error) => setErrorMessage(error)}
                     disabled={!totalAmount || totalAmount <= 0}

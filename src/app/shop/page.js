@@ -1009,80 +1009,34 @@ const Shop = () => {
       const previewProject = localStorage.getItem("previewProjectData");
       const bookFile = window.tempBookFileForSubmission;
       const coverFile = window.tempCoverFileForSubmission;
-
       if (!previewForm || !previewProject || !bookFile) {
         alert("Missing design or file data. Please go back to Design Project.");
         router.push("/design-project");
         return;
       }
-
-      const formData = new FormData();
-      const design = JSON.parse(previewForm);
-      const project = JSON.parse(previewProject);
-
-      // Project basics
-      formData.append("title", project.projectTitle || "");
-      formData.append("category", project.category);
-      formData.append("language", project.language);
-      formData.append("pdf_file", bookFile);
-      if (coverFile) formData.append("cover_file", coverFile);
-
-      // Resolve names from stored dropdowns
-      const drop = JSON.parse(localStorage.getItem("previewDropdowns") || "{}");
-      const findName = (arr, id) => {
-        if (!arr || !id) return "";
-        const m = (arr || []).find((o) => String(o.id) === String(id));
-        return m?.dbName || m?.name || "";
-      };
-      formData.append("binding_type", findName(drop.bindings, design.binding_id));
-      formData.append("cover_finish", findName(drop.cover_finishes, design.cover_finish_id));
-      formData.append("interior_color", findName(drop.interior_colors, design.interior_color_id));
-      formData.append("paper_type", findName(drop.paper_types, design.paper_type_id));
-      if (project.category !== "Calendar" && project.category !== "Calender") {
-        formData.append("trim_size", findName(drop.trim_sizes, design.trim_size_id));
-      }
-      formData.append("page_count", design.page_count || 1);
-
-      // Shipping + account details
-      formData.append("first_name", form.first_name);
-      formData.append("last_name", form.last_name);
-      formData.append("company", form.company);
-      formData.append("address", form.address);
-      formData.append("apt_floor", form.apt_floor);
-      formData.append("country", form.country);
-      formData.append("state", form.state);
-      formData.append("city", form.city);
-      formData.append("postal_code", form.postal_code);
-      formData.append("phone_number", form.phone_number);
-      formData.append("account_type", form.account_type);
-      formData.append("has_resale_cert", form.has_resale_cert);
-
-      // Shipping outcome
-      if (selectedService) formData.append("selected_service", JSON.stringify(selectedService));
-      if (courierName) formData.append("courier_name", courierName);
-      if (estimatedDelivery) formData.append("estimated_delivery", estimatedDelivery);
-      const toMoney = (v) => (v === null || v === undefined || isNaN(v) ? "" : Number(v).toFixed(2));
-      if (shippingRate !== null) formData.append("shipping_rate", toMoney(shippingRate));
-      if (tax !== null) formData.append("tax", toMoney(tax));
-
-      // Pricing summary
-      formData.append("product_quantity", String(productQuantity));
-      formData.append("product_price", toMoney(productPrice || 0));
-      formData.append("subtotal", toMoney(subtotal || 0));
-
-      await axios.post(
-        `${BASE_URL}api/book/save-order/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      // Store all data in localStorage for payment page
+      localStorage.setItem(
+        "pendingOrderData",
+        JSON.stringify({
+          previewForm,
+          previewProject,
+          bookFile: null, // File objects can't be stored, handle in memory if needed
+          coverFile: null,
+          form,
+          shippingRate,
+          tax,
+          taxRate,
+          taxReason,
+          accountType,
+          courierName,
+          estimatedDelivery,
+          selectedService,
+          productQuantity,
+          productPrice,
+          subtotal,
+          displayTotalCost,
+        })
       );
-      alert("Order saved successfully!");
-
-      // Navigate to payment page with all calculated values
       localStorage.setItem(
         "paymentData",
         JSON.stringify({
@@ -1097,20 +1051,10 @@ const Shop = () => {
           accountType: accountType,
         })
       );
-
-      // localStorage.removeItem('shopData');
-
       router.push("/payment");
     } catch (error) {
-      console.error(
-        "Shipping save error:",
-        error.response?.data || error.message
-      );
-      alert(
-        error.response?.status === 401
-          ? "Session expired. Please log in again."
-          : "Failed to save shipping info. Please try again."
-      );
+      console.error("Shipping save error:", error.response?.data || error.message);
+      alert("Failed to save shipping info. Please try again.");
     }
   };
 
