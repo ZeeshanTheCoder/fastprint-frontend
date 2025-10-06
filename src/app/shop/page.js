@@ -757,8 +757,25 @@ const PAKISTANI_REGIONS = [
 
 const Shop = () => {
   const router = useRouter();
+  const [projectData, setProjectData] = useState(null);
 
   // Get data from localStorage (passed from DesignProject)
+
+  useEffect(() => {
+    const fetchLocalStorageData = () => {
+      try {
+        const data = localStorage.getItem("previewProjectData");
+        if (data) {
+          const parsedData = JSON.parse(data);
+          setProjectData(parsedData);
+        }
+      } catch (e) {
+        console.warn("Error accessing localStorage");
+      }
+    };
+
+    fetchLocalStorageData();
+  }, []);
 
   const [initialData, setInitialData] = useState({
     originalTotalCost: 0,
@@ -1552,7 +1569,7 @@ const Shop = () => {
               <div className="bg-[#E5FBFF] rounded-xl p-3 md:p-4 flex gap-3 md:gap-4 mb-4 md:mb-6">
                 <div className="flex flex-col justify-center">
                   <h4 className="text-[#2A428C] font-bold text-lg md:text-xl mb-1">
-                    Book
+                    {projectData?.projectTitle || "Book"}
                   </h4>
                   <p className="text-[#2A428C] text-base md:text-lg font-semibold">
                     Total Price: $

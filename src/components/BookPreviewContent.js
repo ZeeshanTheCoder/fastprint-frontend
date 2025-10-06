@@ -60,6 +60,7 @@ const BookPreviewContent = () => {
   const { token } = useContext(AuthContext);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isEditPreview = searchParams.get("edit") === "true";
 
   const [pdfDataUrl, setPdfDataUrl] = useState(null);
   const [pdfDocument, setPdfDocument] = useState(null);
@@ -67,6 +68,7 @@ const BookPreviewContent = () => {
   const [renderedPages, setRenderedPages] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const bookRef = useRef();
 
@@ -81,31 +83,20 @@ const BookPreviewContent = () => {
   useEffect(() => {
     if (numPages > 0) {
       if (isMobile) {
-        setCurrentPage(1); // mobile -> ek hi page
+        setCurrentPage(1);
       } else {
-        setCurrentPage([1, numPages > 1 ? 2 : null]); // desktop -> left-right
+        setCurrentPage([1, numPages > 1 ? 2 : null]);
       }
     }
   }, [numPages, isMobile]);
 
   useEffect(() => {
     const savedPdfDataUrl = localStorage.getItem("previewPdfDataUrl");
-    const savedProjectData = localStorage.getItem("previewProjectData");
-    const savedFormData = localStorage.getItem("previewFormData");
-
     if (savedPdfDataUrl) {
       setPdfDataUrl(savedPdfDataUrl);
     } else {
       alert("No PDF file found for preview. Please upload a file first.");
       router.push("/design-project");
-    }
-
-    if (savedProjectData) {
-      JSON.parse(savedProjectData);
-    }
-
-    if (savedFormData) {
-      JSON.parse(savedFormData);
     }
   }, [router]);
 
@@ -145,7 +136,6 @@ const BookPreviewContent = () => {
           allPages.push(canvas.toDataURL("image/png"));
         }
 
-        // sirf md+ lg screens par hi "The End" page add karo
         if (!isMobile && pdfDoc.numPages % 2 !== 0) {
           allPages.push("cover");
         }
@@ -161,28 +151,120 @@ const BookPreviewContent = () => {
   }, [pdfDataUrl]);
 
   const handleFlip = (e) => {
-    const pageIndex = e.data; // starts from 0
+    const pageIndex = e.data;
     if (isMobile) {
-      // mobile: single page
       setCurrentPage(pageIndex + 1);
     } else {
-      // desktop/tablet: two-page spread
       const leftPage = pageIndex + 1;
       const rightPage = pageIndex + 2 <= numPages ? pageIndex + 2 : null;
       setCurrentPage([leftPage, rightPage]);
     }
   };
 
+  // ✅ NEW: Submit logic moved here from /design-project
   const handleSubmit = async () => {
-    // Do not submit here. Ensure required temp data exists, then go to /shop
     const formDataString = localStorage.getItem("previewFormData");
     const projectDataString = localStorage.getItem("previewProjectData");
     const bookFile = window.tempBookFileForSubmission;
-    if (!formDataString || !projectDataString || !bookFile) {
+    const coverFile = window.tempCoverFileForSubmission;
+
+    if (!formDataString || !projectDataString || !bookFile || !token) {
       alert("Missing required data. Please go back and complete all steps.");
       return;
     }
-    router.push("/shop");
+
+    let formDataObj;
+    let projectData;
+    try {
+      formDataObj = JSON.parse(formDataString);
+      projectData = JSON.parse(projectDataString);
+    } catch (e) {
+      alert("Invalid project data. Please restart the process.");
+      return;
+    }
+
+    const isCalendar = projectData.category === "Calender" || projectData.category === "Calendar";
+
+    // Helper to get option name by ID
+    const getOptionName = (optionsStr, id) => {
+      if (!optionsStr) return "";
+      try {
+        const options = JSON.parse(optionsStr);
+        return options.find((opt) => opt.id === Number(id))?.name || "";
+      } catch {
+        return "";
+      }
+    };
+
+    const bindingsStr = localStorage.getItem("previewDropdowns");
+    let bindings = [], interior_colors = [], paper_types = [], cover_finishes = [], trim_sizes = [];
+    if (bindingsStr) {
+      const dropdowns = JSON.parse(bindingsStr);
+      bindings = dropdowns.bindings || [];
+      interior_colors = dropdowns.interior_colors || [];
+      paper_types = dropdowns.paper_types || [];
+      cover_finishes = dropdowns.cover_finishes || [];
+      trim_sizes = dropdowns.trim_sizes || [];
+    }
+
+    const formData = new FormData();
+    formData.append("title", projectData.projectTitle || "");
+    formData.append("category", projectData.category);
+    formData.append("language", projectData.language);
+    formData.append("pdf_file", bookFile);
+    if (coverFile) formData.append("cover_file", coverFile);
+
+    formData.append("binding_type", getOptionName(JSON.stringify(bindings), formDataObj.binding_id));
+    formData.append("cover_finish", getOptionName(JSON.stringify(cover_finishes), formDataObj.cover_finish_id));
+    formData.append("interior_color", getOptionName(JSON.stringify(interior_colors), formDataObj.interior_color_id));
+    formData.append("paper_type", getOptionName(JSON.stringify(paper_types), formDataObj.paper_type_id));
+    if (!isCalendar) {
+      formData.append("trim_size", getOptionName(JSON.stringify(trim_sizes), formDataObj.trim_size_id));
+    }
+    formData.append("page_count", formDataObj.page_count || (isCalendar ? 1 : ""));
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      onUploadProgress: (progressEvent) => {
+        setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+      },
+    };
+
+    try {
+      let response;
+      if (isEditPreview && projectData.projectId) {
+        // ✅ UPDATE existing book
+        response = await axios.put(
+          `${API_BASE}api/book/books/${projectData.projectId}/update/`,
+          formData,
+          config
+        );
+      } else {
+        // ✅ CREATE new book
+        response = await axios.post(
+          `${API_BASE}api/book/upload-book/`,
+          formData,
+          config
+        );
+      }
+
+      if (response.data?.status === "success") {
+        alert(isEditPreview ? "Project updated successfully!" : "Project submitted successfully!");
+        router.push("/shop");
+      } else {
+        alert("Submission failed: " + (response.data.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert(
+        error.response?.data?.message ||
+        error.message ||
+        "An error occurred while submitting your project."
+      );
+    }
   };
 
   if (!pdfDataUrl || !renderedPages[0]) {
@@ -336,12 +418,16 @@ const BookPreviewContent = () => {
               </ol>
             </div>
 
+            {/* ✅ Submit Button */}
             <div className="flex flex-col items-center gap-4 md:gap-6 mt-6 md:mt-10">
               <button
                 onClick={handleSubmit}
-                className="w-full max-w-md md:max-w-lg lg:max-w-xl px-6 md:px-10 py-2 md:py-3 bg-gradient-to-r from-[#F8C20A] to-[#EE831E] text-white font-medium text-sm md:text-base rounded-full shadow-md hover:shadow-lg"
+                disabled={uploadProgress > 0 && uploadProgress < 100}
+                className="w-full max-w-md md:max-w-lg lg:max-w-xl px-6 md:px-10 py-2 md:py-3 bg-gradient-to-r from-[#F8C20A] to-[#EE831E] text-white font-medium text-sm md:text-base rounded-full shadow-md hover:shadow-lg disabled:opacity-70"
               >
-                Print Your Book
+                {uploadProgress > 0 && uploadProgress < 100
+                  ? `Uploading... ${uploadProgress}%`
+                  : "Print Your Book"}
               </button>
             </div>
           </div>
