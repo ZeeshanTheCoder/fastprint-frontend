@@ -666,25 +666,16 @@ const OptionSection = ({
   </>
 );
 
-const SummaryRow = ({ pairs }) => {
-  const [leftPair, rightPair] = pairs;
-
-  return (
-    <div className="flex justify-between items-center mb-2 text-sm">
-      {/* Left-aligned item */}
-      <div>
-        <p className="font-semibold text-gray-600">{leftPair[0]}</p>
-        <p className="text-black">{leftPair[1]}</p>
+const SummaryRow = ({ pairs }) => (
+  <div className="flex justify-between mb-2 text-sm">
+    {pairs.map(([label, value], j) => (
+      <div key={j}>
+        <p className="font-semibold text-gray-600">{label}</p>
+        <p className="text-black">{value}</p>
       </div>
-
-      {/* Right-aligned item */}
-      <div className="text-right">
-        <p className="font-semibold text-gray-600">{rightPair[0]}</p>
-        <p className="text-black">{rightPair[1]}</p>
-      </div>
-    </div>
-  );
-};
+    ))}
+  </div>
+);
 
 const PrintBookCalculator = () => {
   const [form, setForm] = useState({
@@ -1024,7 +1015,6 @@ const PrintBookCalculator = () => {
                     </div>
                   )}
                 </div>
-
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                   <h3 className="text-sm font-semibold text-[#2A428C] mb-2">
                     Bulk Discount Tiers
@@ -1068,8 +1058,7 @@ const PrintBookCalculator = () => {
                     </div>
                   </div>
                 </div>
-
-                <ShippingEstimate />
+                <ShippingEstimate bookSpecs={form} pricingResult={result} />{" "}
               </div>
             )}
           </div>
@@ -1104,13 +1093,11 @@ const PrintBookCalculator = () => {
             ].map((row, i) => (
               <React.Fragment key={i}>
                 <SummaryRow pairs={row} />
-                <div className="flex justify-end">
-                  <div
-                    className={`w-full h-px bg-gray-200 ${
-                      i === 2 ? "my-4" : "my-2"
-                    }`}
-                  ></div>
-                </div>
+                <div
+                  className={`w-full h-px bg-gray-200 ${
+                    i === 2 ? "my-4" : "my-2"
+                  }`}
+                ></div>
               </React.Fragment>
             ))}
 

@@ -724,7 +724,8 @@ const ThesisPricingCalculator = () => {
             )}
           </div>
 
-          <ShippingEstimate />
+                          <ShippingEstimate bookSpecs={form} pricingResult={result} />{" "}
+
         </div>
 
         {/* Summary Section */}

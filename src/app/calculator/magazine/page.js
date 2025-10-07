@@ -765,7 +765,8 @@ const MagazineCalculator = () => {
                   </div>
                 </div>
 
-                <ShippingEstimate />
+                                <ShippingEstimate bookSpecs={form} pricingResult={result} />{" "}
+
               </div>
             )}
           </div>

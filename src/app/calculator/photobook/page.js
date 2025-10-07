@@ -1021,7 +1021,6 @@ const PhotoBookCalculator = () => {
                       </div>
                     )}
                   </div>
-
                   <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                     <h3 className="text-sm font-semibold text-[#2A428C] mb-2">
                       Bulk Discount Tiers
@@ -1065,8 +1064,7 @@ const PhotoBookCalculator = () => {
                       </div>
                     </div>
                   </div>
-
-                  <ShippingEstimate />
+                  <ShippingEstimate bookSpecs={form} pricingResult={result} />{" "}
                 </div>
               )}
             </div>
