@@ -271,9 +271,14 @@ const BookPreviewContent = () => {
     return (
       <>
         <NavBar navigate={router.push} />
-        <div className="w-full min-h-screen flex items-center justify-center">
-          <p>Loading PDF preview...</p>
+         <div className="min-h-screen bg-gradient-to-br from-[#eef4ff] to-[#fef6fb] flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#016AB3]/20 border-t-[#016AB3]" />
+          </div>
+          <p className="text-xl font-semibold text-[#016AB3] mt-6">Loading Book...</p>
         </div>
+      </div>
       </>
     );
   }
